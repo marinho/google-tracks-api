@@ -108,8 +108,17 @@ class TracksAPI(object):
 
         return self.request('entities/list', params)
 
+    def delete_entitie(self, entityId):
+        """Deletes a given entity
+        
+        Parameters:
+        - entityId: string with entity ID to delete"""
+        return self.delete_entities([entityId])
+
     def delete_entities(self, entityIds):
-        """Parameters:
+        """Deletes entities with the given IDs
+        
+        Parameters:
         - entityIds: a list with strings"""
         return self.request('entities/delete', {'entityIds':entityIds})
 
@@ -155,14 +164,24 @@ class TracksAPI(object):
 
         return self.request('collections/list', params)
 
+    def delete_collection(self, collectionId):
+        """Deletes a collection
+        
+        Parameters:
+        - collectionId: string with collection ID to delete"""
+        return self.delete_collections([collectionId])
+
     def delete_collections(self, collectionIds):
-        """Parameters:
+        """Deletes collections with given IDs
+        
+        Parameters:
         - collectionIds: a list with strings"""
         return self.request('collections/delete', {'collectionIds':collectionIds})
 
     # Methods for Crumbs
 
     def format_crumb(self, crumb):
+        """Formats a crumb dict in the supported keys."""
         timestamp = self.parse_timestamp(crumb['timestamp'].timetuple())
 
         values = {
@@ -180,6 +199,17 @@ class TracksAPI(object):
         return values
 
     def record_crumb(self, entityId, location, timestamp, confidenceRadius=None, heading=None, userData=None):
+        """Records a crumb for a given entity in a location and a timestamp.
+        
+        Parameters:
+        - entityId: a string with the entity ID
+        - location: a dictionarywith keys 'lat' and 'lng'
+        - timestamp: a UTC datetime object or a float number with seconds from 1/1/1970
+        - confidenceRadius: distance precision (0~35000)
+        - heading: degrees (0~359)
+        - userData: dict with additional data
+        
+        More on: https://developers.google.com/maps/documentation/business/tracks/crumbs#overview"""
         return self.record_crumbs(entityId, {
             'location':location,
             'timestamp':timestamp,
@@ -192,8 +222,7 @@ class TracksAPI(object):
         """Parameters:
         - entityId: an entity ID string
         - crumbs: a list with dictionaries with crumbs information
-            - "location" (dict), "timestamp" (UTC), "confidenceRadius" (0~35000), "heading" (0~359) and "userData" (dict).
-              https://developers.google.com/maps/documentation/business/tracks/crumbs#overview"""
+            - see at record_crumb for more details."""
         params = {'entityId':entityId, 'crumbs': map(self.format_crumb, crumbs)}
         return self.request('crumbs/record', params)
 
@@ -265,21 +294,81 @@ class TracksAPI(object):
 
     # Methods for Geofences
 
-    def create_geofences(self):
-        method = 'geofences/create'
+    def create_geofence(self, name, polygon):
+        """Creates a geofence with given name and polygon.
+        
+        Parameters:
+        - name: a simple string
+        - polygon: a dict like: {'invert':false, 'loops':[{'vertices':[{'lat':10.2,'lng':0},...]},...]}
+            more on: https://developers.google.com/maps/documentation/business/tracks/concepts#geometry"""
+        return self.create_geofences({'name':name, 'polygon':polygon})
 
-    def add_members_to_geofences(self):
-        method = 'geofences/addmembers'
+    def create_geofences(self, geofences):
+        """Creates many given geofences
+        
+        Parameters:
+        - geofences: a list of dicts (see at create_geofence for more details)"""
+        return self.request('geofences/create', geofences)
 
-    def remove_members_from_geofences(self):
-        method = 'geofences/removemembers'
+    def add_members_to_geofences(self, geofenceId, collectionIds, entityIds):
+        """Adds collections and entities to a given geofence
 
-    def list_geofences(self):
-        method = 'geofences/list'
+        Parameters:
+        - geofenceId: a string with the geofence ID
+        - collectionIds: a list with collections IDs
+        - entityIds: a list with entities IDs
+        """
+        return self.request('geofences/addmembers', {
+            'geofenceId': geofenceId,
+            'collectionIds': collectionIds,
+            'entityIds': entityIds,
+            })
 
-    def delete_geofences(self):
-        method = 'geofences/delete'
+    def remove_members_from_geofences(self, geofenceId, collectionIds, entityIds):
+        """Removes collections and entities from a given geofence
 
-    def get_active_geofences(self):
-        method = 'geofences/getrecentlyactive'
+        Parameters:
+        - geofenceId: a string with the geofence ID
+        - collectionIds: a list with collections IDs
+        - entityIds: a list with entities IDs
+        """
+        return self.request('geofences/removemembers', {
+            'geofenceId': geofenceId,
+            'collectionIds': collectionIds,
+            'entityIds': entityIds,
+            })
+
+    def list_geofences(self, geofenceIds=None, minId=None):
+        """Returns a list with existing geofences in that account
+
+        Parameters:
+        - geofenceIds: optional list for filtering the list to a specific list
+        - minId: optional strin with minimum ID for a contiguous set of geofences starting from this value"""
+        params = {}
+        if geofenceIds:
+            params['geofenceIds'] = geofenceIds
+        if minId:
+            params['minId'] = minId
+        return self.request('geofences/list', params)
+
+    def delete_geofence(self, geofenceId):
+        """Delete one existing geofence with give ID
+        
+        Parameters:
+        - geofenceId: string with geofence ID to delete"""
+        return self.delete_geofences([geofenceId])
+
+    def delete_geofences(self, geofenceIds):
+        """Delete existing geofences with given IDs
+        
+        Parameters:
+        - geofenceIds: a list with geofences IDs to delete"""
+        return self.request('geofences/delete', {'geofenceIds':geofenceIds})
+
+    def get_active_geofences(self, collectionId):
+        """Returns the active geofences a collection is member of.
+        
+        Parameters:
+        - collectionId: a string with collection ID for filtering"""
+        return self.request('geofences/getrecentlyactive', {'collectionId':collectionId})
 
