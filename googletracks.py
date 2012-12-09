@@ -47,6 +47,14 @@ class TracksAPI(object):
             'content-length': str(len(body)),
         }
 
+    def parse_timestamp(self, timestamp):
+        if isinstance(crumb['timestamp'], datetime.datetime):
+            return time.mktime(crumb['timestamp'].timetuple())
+        elif isinstance(crumb['timestamp'], (float,int)):
+            return crumb['timestamp']
+        else:
+            raise TypeError('Invalid timestamp: %s' % crumb['timestamp'])
+
     def get_credentials(self):
         return SignedJwtAssertionCredentials(self.client_email, self.certificate_key, scope=self.scope_uri,
                 token_uri=self.token_uri)
@@ -155,12 +163,7 @@ class TracksAPI(object):
     # Methods for Crumbs
 
     def format_crumb(self, crumb):
-        if isinstance(crumb['timestamp'], datetime.datetime):
-            timestamp = time.mktime(crumb['timestamp'].timetuple())
-        elif isinstance(crumb['timestamp'], (float,int)):
-            timestamp = crumb['timestamp']
-        else:
-            raise TypeError('Invalid timestamp: %s' % crumb['timestamp'])
+        timestamp = self.parse_timestamp(crumb['timestamp'].timetuple())
 
         values = {
             'location': {'lat':float(crumb['location']['lat']), 'lng':float(crumb['location']['lng'])},
@@ -194,20 +197,71 @@ class TracksAPI(object):
         params = {'entityId':entityId, 'crumbs': map(self.format_crumb, crumbs)}
         return self.request('crumbs/record', params)
 
-    def get_recent_crumbs(self):
-        method = 'crumbs/getrecent'
+    def get_recent_crumbs(self, collectionId):
+        """Retrieves recent crumbs for the given collection.
+        
+        Parameters:
+        - collectionId: the collection ID string"""
+        return self.request('crumbs/getrecent', {'collectionId':collectionId})
 
-    def get_crumbs_history(self):
-        method = 'crumbs/gethistory'
+    def get_crumbs_history(self, entityId, timestamp, countBefore=None, countAfter=None):
+        """Returns until 512 crumbs for a given entity a period of time based on a given timestamp
+        
+        Parameters:
+        - entityId: an entity ID string
+        - timestamp: timestamp of interest
+        - countBefore: optional (0~512)
+        - countAfter: optional (0~512)"""
 
-    def summarize_crumbs(self):
-        method = 'crumbs/summarize'
+        params = {'entityId':entityId, 'timestamp': self.parse_timestamp(timestamp)}
+        if countBefore is not None:
+            params['countBefore'] = countBefore
+        if countAfter is not None:
+            params['countAfter'] = countAfter
 
-    def get_crumbs_location_info(self):
-        method = 'crumbs/getlocationinfo'
+        return self.request('crumbs/gethistory', params)
 
-    def delete_crumbs(self):
-        method = 'crumbs/delete'
+    def summarize_crumbs(self, entityId, minTimestamp, maxTimestamp):
+        """Returns a summarized path for a given Entity between two timestamps
+        
+        Parameters:
+        - entityId: an entity ID string
+        - minTimestamp: start timestamp
+        - maxTimestamp: end timestamp"""
+
+        return self.request('crumbs/summarize', {
+            'entityId': entityId,
+            'minTimestamp': self.parse_timestamp(minTimestamp),
+            'maxTimestamp': self.parse_timestamp(maxTimestamp),
+            })
+
+    def get_crumbs_location_info(self, entityId, timestamp, language=None):
+        """Returns the location information for a given entity in a given timestamp
+        
+        Parameters:
+        - entityId: an entity ID string
+        - timestamp: timestamp of interest
+        - language: optional (i.e. en, pt-BR, fr, etc.)"""
+
+        params = {'entityId':entityId, 'timestamp': self.parse_timestamp(timestamp)}
+        if language is not None:
+            params['language'] = language
+
+        return self.request('crumbs/getlocationinfo', params)
+
+    def delete_crumbs(self, entityId, minTimestamp, maxTimestamp):
+        """Deletes all crumbs for a given Entity between two timestamps
+        
+        Parameters:
+        - entityId: an entity ID string
+        - minTimestamp: start timestamp
+        - maxTimestamp: end timestamp"""
+
+        return self.request('crumbs/delete', {
+            'entityId': entityId,
+            'minTimestamp': self.parse_timestamp(minTimestamp),
+            'maxTimestamp': self.parse_timestamp(maxTimestamp),
+            })
 
     # Methods for Geofences
 
