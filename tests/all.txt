@@ -1,0 +1,136 @@
+Important notes:
+
+The following packages are required to run this test:
+- nose
+- oauth2client
+- httplib2
+- pyopenssl
+
+This test also requires an existing account in Google Maps Tracks API.
+
+local_settings.py must include valid values in CLIENT_EMAIL and PRIVATE_KEY
+for a real account in Google APIs
+
+    >>> from local_settings import CLIENT_EMAIL, PRIVATE_KEY
+
+Basic
+-----
+
+    >>> import datetime
+    >>> now = datetime.datetime.utcnow().replace(microsecond=0)
+
+    >>> from googletracks import TracksAPI
+    >>> api = TracksAPI(CLIENT_EMAIL, PRIVATE_KEY)
+
+    >>> bool(api.certificate_key)
+    True
+
+    >>> api.make_headers('{}')
+    {'content-length': '2', 'content-type': 'application/json'}
+
+    >>> ts = api.parse_timestamp(now)
+    >>> now == datetime.datetime.fromtimestamp(ts)
+    True
+
+    >>> api.parse_timestamp(123)
+    123
+
+    >>> from oauth2client.client import SignedJwtAssertionCredentials
+
+    >>> isinstance(api.get_credentials(), SignedJwtAssertionCredentials)
+    True
+
+Preparing Entities and Collections
+----------------------------------
+
+    >>> #entities = []
+    >>> entities = ['2dbc2d4f3e5b117f','c14679090b9a1d39','cb82a36970516948']
+
+    >>> #entities += api.create_entity(name='Ford Fiesta 1', type='AUTOMOBILE')['entityIds']
+    >>> #len(entities)
+    1
+
+    >>> #entities += api.create_entities([{'name':'VW Golf 2'}, {'name':'GM Camaro 3'}])['entityIds']
+    >>> #len(entities)
+    3
+
+    >>> #collections = []
+    >>> collections = ['0a41171a6e74d0e5','6a309ecaad571981','e8b59b31a213032a']
+
+    >>> #collections += api.create_collection(name='Fleet London')['collectionIds']
+    >>> #len(collections)
+    1
+
+    >>> #collections += api.create_collections([{'name':'Fleet Berlin'},{'name':'Fleet Rio'}])['collectionIds']
+    >>> #len(collections)
+    3
+
+    >>> #api.add_entities_to_collection(collections[0], [entities[0],entities[1]])
+    {}
+
+    >>> #api.add_entities_to_collection(collections[1], [entities[1],entities[2]])
+    {}
+
+    >>> #api.add_entities_to_collection(collections[2], [entities[0],entities[2]])
+    {}
+
+Querying Entities and Collections
+---------------------------------
+
+    >>> #all_entities = api.list_entities(entities)
+    >>> #len(entities) == len(all_entities['entities'])
+    True
+
+    >>> #all_collections = api.list_collections(collections)
+    >>> #len(collections) == len(all_collections['collections'])
+    True
+
+Crumbs
+------
+
+    >>> formatted = api.format_crumb({'location':{'lat':1,'lng':2},'timestamp':now})
+    >>> formatted == {'timestamp': ts, 'location': {'lat': 1.0, 'lng': 2.0}}
+    True
+
+record_crumb
+record_crumbs
+get_recent_crumbs
+get_crumbs_history
+summarize_crumbs
+get_crumbs_location_info
+
+Geofences
+---------
+
+create_geofence
+create_geofences
+add_members_to_geofences
+list_geofences
+get_active_geofences
+
+Deleting everything
+-------------------
+
+remove_members_from_geofences
+delete_geofence
+delete_geofences
+delete_crumbs
+
+    >>> #api.remove_entities_from_collection(collections[0], [entities[2]])
+    {}
+
+delete_entity
+
+    >>> #api.delete_entities(entities)
+
+delete_collection
+
+    >>> #api.delete_collections(collections)
+
+Querying after deletion
+-----------------------
+
+list_entities
+list_collections
+list_geofences
+

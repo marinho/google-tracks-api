@@ -34,7 +34,7 @@ if method == 'entities/create':
         {'name':'Tiagos Vehicle', 'type':'AUTOMOBILE'}, # "e489ec95b838c1fa"
         ]}) # TRUCK, WATERCRAFT, PERSON
 elif method == 'entities/delete':
-    body = json.dumps({'entityIds':["a4783c6b63951bdd","e489ec95b838c1fa"]})
+    body = json.dumps({'entityIds':["74437a1958483232","ec112841f2b7c744","f56cf27773d497ef"]})
 elif method == 'collections/create':
     body = json.dumps({'collections':[
         {'name':'TDispatch Fleet'}, # "8d11d3be39af079e"
@@ -120,5 +120,5 @@ headers = {
 _, content = http.request(url, 'POST', headers=headers, body=body)
 
 # Output response.
-print(_, content)
+print content
 

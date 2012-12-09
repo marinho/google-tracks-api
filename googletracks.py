@@ -37,7 +37,7 @@ class TracksAPI(object):
 
     def load_key(self, certificate_file):
         fp = file(certificate_file, 'rb')
-        key = f.read()
+        key = fp.read()
         fp.close()
         return key
 
@@ -48,12 +48,12 @@ class TracksAPI(object):
         }
 
     def parse_timestamp(self, timestamp):
-        if isinstance(crumb['timestamp'], datetime.datetime):
-            return time.mktime(crumb['timestamp'].timetuple())
-        elif isinstance(crumb['timestamp'], (float,int)):
-            return crumb['timestamp']
+        if isinstance(timestamp, datetime.datetime):
+            return time.mktime(timestamp.timetuple())
+        elif isinstance(timestamp, (float,int)):
+            return timestamp
         else:
-            raise TypeError('Invalid timestamp: %s' % crumb['timestamp'])
+            raise TypeError('Invalid timestamp: %s' % timestamp)
 
     def get_credentials(self):
         return SignedJwtAssertionCredentials(self.client_email, self.certificate_key, scope=self.scope_uri,
@@ -61,7 +61,7 @@ class TracksAPI(object):
 
     def get_http_client(self):
         if not hasattr(self, '_http_client'):
-            self._http_client = httplib2.Http()
+            http = httplib2.Http()
             self._http_client = self.get_credentials().authorize(http)
 
         return self._http_client
@@ -92,7 +92,7 @@ class TracksAPI(object):
     def create_entities(self, entities):
         """Parameters:
         - entities: must be a list of dictionaries with keys "name" and "type" (optional)"""
-        return self.request('entities/create', entities)
+        return self.request('entities/create', {'entities':entities})
 
     def list_entities(self, entityIds=None, minId=None):
         """Parameters:
@@ -108,7 +108,7 @@ class TracksAPI(object):
 
         return self.request('entities/list', params)
 
-    def delete_entitie(self, entityId):
+    def delete_entity(self, entityId):
         """Deletes a given entity
         
         Parameters:
@@ -132,7 +132,7 @@ class TracksAPI(object):
     def create_collections(self, collections):
         """Parameters:
         - collections: must be a list of dictionaries with key "name"."""
-        return self.request('collections/create', collections)
+        return self.request('collections/create', {'collections':collections})
 
     def add_entities_to_collection(self, collectionId, entityIds):
         """Adds the given entities into a collection.
@@ -182,7 +182,7 @@ class TracksAPI(object):
 
     def format_crumb(self, crumb):
         """Formats a crumb dict in the supported keys."""
-        timestamp = self.parse_timestamp(crumb['timestamp'].timetuple())
+        timestamp = self.parse_timestamp(crumb['timestamp'])
 
         values = {
             'location': {'lat':float(crumb['location']['lat']), 'lng':float(crumb['location']['lng'])},
@@ -308,7 +308,7 @@ class TracksAPI(object):
         
         Parameters:
         - geofences: a list of dicts (see at create_geofence for more details)"""
-        return self.request('geofences/create', geofences)
+        return self.request('geofences/create', {'geofences':geofences})
 
     def add_members_to_geofences(self, geofenceId, collectionIds, entityIds):
         """Adds collections and entities to a given geofence
