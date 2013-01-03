@@ -9,8 +9,6 @@ except ImportError:
 
 from setuptools import setup
 
-import googletracks
-
 install_requires = ['httplib2','oauth2client','pyopenssl']
 if sys.version_info[0] <= 2 and sys.version_info[1] <= 5:
     install_requires.append('simplejson')
