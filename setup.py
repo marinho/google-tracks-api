@@ -9,7 +9,7 @@ except ImportError:
 
 from setuptools import setup
 
-packages = ['googletracks']
+import googletracks
 
 install_requires = ['httplib2','oauth2client']
 if sys.version_info[0] <= 2 and sys.version_info[1] <= 5:
@@ -18,10 +18,10 @@ if sys.version_info[0] <= 2 and sys.version_info[1] <= 5:
 setup(
     name='Google Tracks API Wrapper',
     version=0.1,
-    #url='',
+    url='https://github.com/TDispatch/google-tracks-api',
     author="Marinho Brandao",
     license="BSD License",
-    packages=packages,
     install_requires=install_requires,
+    py_modules=['googletracks'],
     )
 
