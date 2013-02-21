@@ -14,7 +14,7 @@ if sys.version_info[0] <= 2 and sys.version_info[1] <= 5:
     install_requires.append('simplejson')
 
 setup(
-    name='Google Tracks API Wrapper',
+    name='google-tracks',
     version='0.1.1',
     url='https://github.com/TDispatch/google-tracks-api',
     author="Marinho Brandao",
