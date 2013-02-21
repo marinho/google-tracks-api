@@ -301,7 +301,7 @@ class TracksAPI(object):
         - name: a simple string
         - polygon: a dict like: {'invert':false, 'loops':[{'vertices':[{'lat':10.2,'lng':0},...]},...]}
             more on: https://developers.google.com/maps/documentation/business/tracks/concepts#geometry"""
-        return self.create_geofences({'name':name, 'polygon':polygon})
+        return self.create_geofences([{'name':name, 'polygon':polygon}])
 
     def create_geofences(self, geofences):
         """Creates many given geofences
