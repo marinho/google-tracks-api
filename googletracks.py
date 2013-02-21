@@ -142,7 +142,7 @@ class TracksAPI(object):
         - entityIds: a list with entity ID strings"""
         return self.request('collections/addentities', {'collectionId':collectionId, 'entityIds':entityIds})
 
-    def remove_entities_from_collection(self):
+    def remove_entities_from_collection(self, collectionId, entityIds):
         """Removes the given entities from a collection.
         
         Parameters:
@@ -210,13 +210,13 @@ class TracksAPI(object):
         - userData: dict with additional data
         
         More on: https://developers.google.com/maps/documentation/business/tracks/crumbs#overview"""
-        return self.record_crumbs(entityId, {
+        return self.record_crumbs(entityId, [{
             'location':location,
             'timestamp':timestamp,
             'confidenceRadius':confidenceRadius,
             'heading':heading,
             'userData':userData,
-            })
+            }])
 
     def record_crumbs(self, entityId, crumbs):
         """Parameters:
