@@ -15,7 +15,7 @@ if sys.version_info[0] <= 2 and sys.version_info[1] <= 5:
 
 setup(
     name='Google Tracks API Wrapper',
-    version=0.1.1,
+    version='0.1.1',
     url='https://github.com/TDispatch/google-tracks-api',
     author="Marinho Brandao",
     license="BSD License",
