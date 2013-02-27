@@ -11,6 +11,8 @@ except ImportError:
 
 
 class RequestFailed(BaseException): pass
+class QuotaExceeded(RequestFailed): pass
+class RateLimitExceeded(RequestFailed): pass
 
 
 class TracksAPI(object):
@@ -66,15 +68,30 @@ class TracksAPI(object):
 
         return self._http_client
 
-    def request(self, method, data=None):
+    def request(self, method, data=None, try_again_after=5, attempts=5):
+        try:
+            return self._internal_request(method, data)
+        except RateLimitExceeded:
+            if not attempts:
+                raise
+
+            time.sleep(try_again_after)
+            return self.request(method, data, try_again_after, attempts=attempts-1)
+
+    def _internal_request(self, method, data=None):
         http = self.get_http_client()
         url = self.base_url + method
         body = json.dumps(data) if data else ''
 
         headers, content = http.request(url, 'POST', headers=self.make_headers(body), body=body)
+        json_content = json.loads(content)
 
         if headers['status'] == '200' and headers['content-type'].startswith('application/json'):
-            return json.loads(content)
+            return json_content
+        elif json_content['error']['message'].endswith(' quota exceeded'):
+            raise QuotaExceeded('Method "%s" returned: %s (%s)' % (method,json_content['error']['message'],headers['status']))
+        elif json_content['error']['message'] == 'Rate limit exceeded.':
+            raise RateLimitExceeded('Method "%s" returned: %s (%s)' % (method,json_content['error']['message'],headers['status']))
         else:
             raise RequestFailed('Method "%s" returned: %s (%s)' % (method,content,headers['status']))
 
@@ -310,7 +327,7 @@ class TracksAPI(object):
         - geofences: a list of dicts (see at create_geofence for more details)"""
         return self.request('geofences/create', {'geofences':geofences})
 
-    def add_members_to_geofences(self, geofenceId, collectionIds, entityIds):
+    def add_members_to_geofence(self, geofenceId, collectionIds, entityIds):
         """Adds collections and entities to a given geofence
 
         Parameters:
@@ -324,7 +341,7 @@ class TracksAPI(object):
             'entityIds': entityIds,
             })
 
-    def remove_members_from_geofences(self, geofenceId, collectionIds, entityIds):
+    def remove_members_from_geofence(self, geofenceId, collectionIds, entityIds):
         """Removes collections and entities from a given geofence
 
         Parameters:
@@ -371,4 +388,21 @@ class TracksAPI(object):
         Parameters:
         - collectionId: a string with collection ID for filtering"""
         return self.request('geofences/getrecentlyactive', {'collectionId':collectionId})
+
+    def clean_account(self):
+        """Removes every existing entity, collection and geofence from the API."""
+        # entities
+        entities = self.list_entities()
+        if entities.get('entities',None):
+            self.delete_entities([e['id'] for e in entities['entities']])
+
+        # collections
+        collections = self.list_collections()
+        if collections.get('collections',None):
+            self.delete_collections([e['id'] for e in collections['collections']])
+
+        # geofences
+        geofences = self.list_geofences()
+        if geofences.get('geofences',None):
+            self.delete_geofences([e['id'] for e in geofences['geofences']])
 
