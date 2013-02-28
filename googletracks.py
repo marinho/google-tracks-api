@@ -13,6 +13,7 @@ except ImportError:
 class RequestFailed(BaseException): pass
 class QuotaExceeded(RequestFailed): pass
 class RateLimitExceeded(RequestFailed): pass
+class TooManyObjectsInRequest(RequestFailed): pass
 
 
 class TracksAPI(object):
@@ -92,6 +93,8 @@ class TracksAPI(object):
             raise QuotaExceeded('Method "%s" returned: %s (%s)' % (method,json_content['error']['message'],headers['status']))
         elif json_content['error']['message'] == 'Rate limit exceeded.':
             raise RateLimitExceeded('Method "%s" returned: %s (%s)' % (method,json_content['error']['message'],headers['status']))
+        elif json_content['error']['message'].startswith('Too many objects in request;'):
+            raise TooManyObjectsInRequest('Method "%s" returned: %s (%s)' % (method,json_content['error']['message'],headers['status']))
         else:
             raise RequestFailed('Method "%s" returned: %s (%s)' % (method,content,headers['status']))
 

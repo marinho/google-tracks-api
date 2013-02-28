@@ -82,6 +82,22 @@ Still under construction - a few can be found in [1]
      }
     }
 
+## Too many objects in a request
+
+    {
+     "error": {
+      "errors": [
+       {
+        "domain": "tracks",
+        "reason": "invalidRequest",
+        "message": "Too many objects in request; the limit is 128."
+       }
+      ],
+      "code": 400,
+      "message": "Too many objects in request; the limit is 128."
+     }
+    }
+
 ## References
 
 1. https://developers.google.com/maps/documentation/tracks/concepts
