@@ -98,6 +98,22 @@ Still under construction - a few can be found in [1]
      }
     }
 
+## Global backend error
+
+    {
+     "error": {
+      "errors": [
+       {
+        "domain": "global",
+        "reason": "backendError",
+        "message": "Backend Error"
+       }
+      ],
+      "code": 503,
+      "message": "Backend Error"
+     }
+    }
+
 ## References
 
 1. https://developers.google.com/maps/documentation/tracks/concepts
