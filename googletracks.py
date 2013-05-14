@@ -89,14 +89,20 @@ class TracksAPI(object):
 
         if headers['status'] == '200' and headers['content-type'].startswith('application/json'):
             return json_content
-        elif json_content['error']['message'].endswith(' quota exceeded'):
-            raise QuotaExceeded('Method "%s" returned: %s (%s)' % (method,json_content['error']['message'],headers['status']))
+
+        if json_content['error']['message'].endswith(' quota exceeded'):
+            error = QuotaExceeded('Method "%s" returned: %s (%s)' % (method,json_content['error']['message'],headers['status']))
         elif json_content['error']['message'] == 'Rate limit exceeded.':
-            raise RateLimitExceeded('Method "%s" returned: %s (%s)' % (method,json_content['error']['message'],headers['status']))
+            error = RateLimitExceeded('Method "%s" returned: %s (%s)' % (method,json_content['error']['message'],headers['status']))
         elif json_content['error']['message'].startswith('Too many objects in request;'):
-            raise TooManyObjectsInRequest('Method "%s" returned: %s (%s)' % (method,json_content['error']['message'],headers['status']))
+            error = TooManyObjectsInRequest('Method "%s" returned: %s (%s)' % (method,json_content['error']['message'],headers['status']))
         else:
-            raise RequestFailed('Method "%s" returned: %s (%s)' % (method,content,headers['status']))
+            error = RequestFailed('Method "%s" returned: %s (%s)' % (method,content,headers['status']))
+
+        error.request_method = method
+        error.response_content = json_content
+        error.response_headers = headers
+        raise error
 
     # Methods for Entities
 
